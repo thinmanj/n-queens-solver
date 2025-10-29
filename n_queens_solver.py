@@ -1,91 +1,198 @@
-class QueensProblem:
+"""N-Queens Problem Solver.
 
-    def __init__(self, n):
+This module solves the classic N-Queens problem using a backtracking algorithm.
+The goal is to place N queens on an N×N chessboard such that no two queens
+threat each other (same row, column, or diagonal).
+"""
+
+import argparse
+import sys
+from typing import List, Optional
+
+
+class NQueensSolver:
+    """Solves the N-Queens problem using backtracking.
+    
+    Attributes:
+        n: The size of the chessboard (N×N)
+        board: 2D list representing the chessboard (1 = queen, 0 = empty)
+        solutions_count: Number of solutions found
+        verbose: Whether to print progress information
+    """
+
+    def __init__(self, n: int, verbose: bool = False):
+        """Initialize the N-Queens solver.
+        
+        Args:
+            n: Size of the chessboard
+            verbose: Enable verbose output during solving
+            
+        Raises:
+            ValueError: If n < 1
+        """
+        if n < 1:
+            raise ValueError("Board size must be at least 1")
+        
         self.n = n
-        self.chess_table = [[0 for i in range(n)] for j in range(n)]
+        self.board: List[List[int]] = [[0] * n for _ in range(n)]
+        self.solutions_count = 0
+        self.verbose = verbose
 
-    def solve_n_queens(self):
-
-        # we start with the first queen (with index 0)
-        if self.solve(0):
-            self.print_queens()
+    def solve(self) -> bool:
+        """Solve the N-Queens problem and display the result.
+        
+        Returns:
+            True if a solution was found, False otherwise
+        """
+        if self.verbose:
+            print(f"Solving {self.n}-Queens problem...")
+        
+        if self._backtrack(0):
+            self._print_board()
+            return True
         else:
-            # when we have considered all the possible configurations without a success
-            # then it means there is no solution (3x3 with 3 queens)
-            print('There is no solution to the problem...')
+            print(f"No solution exists for {self.n}-Queens problem.")
+            return False
 
-    # col_index is the same as the index of the queen
-    def solve(self, col_index):
-        print(f'\n{col_index}', end="")
-        # we have solved the problem - base case
-        if col_index == self.n:
+    def _backtrack(self, col: int) -> bool:
+        """Recursively place queens using backtracking.
+        
+        Args:
+            col: Current column to place a queen
+            
+        Returns:
+            True if queens can be placed successfully, False otherwise
+        """
+        # Base case: all queens are placed
+        if col >= self.n:
             return True
 
-        # let's try to find a position for queen (col_index) within a given column
-        for row_index in range(self.n):
-            if self.is_place_valid(row_index, col_index):
-                # 1 means that there is a queen at the given location
-                self.chess_table[row_index][col_index] = 1
-                # self.mark_position(row_index, col_index)
-                # self.print_queens()
-                # print("-"*20)
-                # we call the same function with col_index+1
-                # we try to find the location of the next queen in the next column
-                if self.solve(col_index+1):
+        # Try placing a queen in each row of the current column
+        for row in range(self.n):
+            if self._is_safe(row, col):
+                # Place the queen
+                self.board[row][col] = 1
+                
+                if self.verbose:
+                    print(f"Placed queen at ({row}, {col})")
+
+                # Recursively place the rest of the queens
+                if self._backtrack(col + 1):
                     return True
 
-                # BACKTRACK
-                # print(f'BACKTRACKING ... {col_index}-{row_index}')
-                print(".", end="")
-                self.chess_table[row_index][col_index] = 0
-                self.mark_position(row_index, col_index, -2)
-        #   self.print_queens()
+                # Backtrack: remove the queen
+                self.board[row][col] = 0
+                if self.verbose:
+                    print(f"Backtracked from ({row}, {col})")
 
-        # when we have considered all the rows in a col without
-        # finding a valid cell for the queen
         return False
 
-    def mark_position(self, row_index, col_index, val=2):
-        d = 1
-        for x in range(col_index+1, self.n):
-            self.chess_table[row_index][x] += val
-            if row_index - d >= 0:
-                self.chess_table[row_index-d][x] += val
-
-            if row_index + d < self.n:
-                self.chess_table[row_index+d][x] += val
-            d += 1
-
-    def is_place_valid(self, row_index, col_index):
-        if self.chess_table[row_index][col_index]:
-            return False
-        # print(f"inside {row_index} {col_index}")
-
-        self.mark_position(row_index, col_index)
-        for x in range(self.n-1, col_index, -1):
-            for y in range(self.n):
-                if not self.chess_table[y][x]:
-                    break
-            else:
-                # print(f"invalid {x} for {row_index} {col_index}")
-                self.mark_position(row_index, col_index, -2)
+    def _is_safe(self, row: int, col: int) -> bool:
+        """Check if it's safe to place a queen at board[row][col].
+        
+        Args:
+            row: Row position
+            col: Column position
+            
+        Returns:
+            True if position is safe, False otherwise
+        """
+        # Check row on the left side
+        for j in range(col):
+            if self.board[row][j] == 1:
                 return False
 
-        # self.mark_position(row_index, col_index, -2)
+        # Check upper diagonal on left side
+        i, j = row, col
+        while i >= 0 and j >= 0:
+            if self.board[i][j] == 1:
+                return False
+            i -= 1
+            j -= 1
+
+        # Check lower diagonal on left side
+        i, j = row, col
+        while i < self.n and j >= 0:
+            if self.board[i][j] == 1:
+                return False
+            i += 1
+            j -= 1
+
         return True
 
-    def print_queens(self):
+    def _print_board(self) -> None:
+        """Print the chessboard with queens marked as 'Q'."""
+        print("\n" + "=" * (4 * self.n + 1))
         for i in range(self.n):
+            print("|", end="")
             for j in range(self.n):
-                if self.chess_table[i][j] == 1:
-                    print(' Q ', end='')
-                elif self.chess_table[i][j] == 1:
-                    print(' - ', end='')
+                if self.board[i][j] == 1:
+                    print(" Q ", end="|")
                 else:
-                    print(f' {self.chess_table[i][j]//2} ', end='')
-            print('\n')
+                    print("   ", end="|")
+            print()
+            print("=" * (4 * self.n + 1))
+        print(f"\nSolution found for {self.n}-Queens problem!\n")
+
+    def get_solution(self) -> Optional[List[int]]:
+        """Get the solution as a list of row positions for each column.
+        
+        Returns:
+            List of row indices where queens are placed, or None if not solved
+        """
+        solution = []
+        for col in range(self.n):
+            for row in range(self.n):
+                if self.board[row][col] == 1:
+                    solution.append(row)
+                    break
+        return solution if len(solution) == self.n else None
 
 
-if __name__ == '__main__':
-    queens = QueensProblem(100)
-    queens.solve_n_queens()
+def main():
+    """Main entry point for the N-Queens solver."""
+    parser = argparse.ArgumentParser(
+        description="Solve the N-Queens problem using backtracking.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  python n_queens_solver.py 8          # Solve 8-Queens
+  python n_queens_solver.py 20 -v     # Solve 20-Queens with verbose output
+        """
+    )
+    parser.add_argument(
+        "n",
+        type=int,
+        nargs="?",
+        default=8,
+        help="Size of the chessboard (default: 8)"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate input
+    if args.n < 1:
+        print("Error: Board size must be at least 1", file=sys.stderr)
+        sys.exit(1)
+    
+    if args.n in [2, 3]:
+        print(f"Warning: No solution exists for {args.n}-Queens problem.")
+    
+    # Solve the problem
+    try:
+        solver = NQueensSolver(args.n, verbose=args.verbose)
+        solver.solve()
+    except KeyboardInterrupt:
+        print("\n\nInterrupted by user.")
+        sys.exit(130)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

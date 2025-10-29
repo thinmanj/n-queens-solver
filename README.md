@@ -11,10 +11,13 @@ This implementation uses a backtracking algorithm enhanced with constraint propa
 ## Features
 
 - ✅ Solves N-Queens problem for any board size
-- ✅ Backtracking algorithm with optimization
-- ✅ Constraint propagation to reduce search space
-- ✅ Visual board output showing queen positions
-- ✅ Progress tracking during computation
+- ✅ Clean, efficient backtracking algorithm
+- ✅ Command-line interface with argument parsing
+- ✅ Visual board output with formatted table
+- ✅ Optional verbose mode for debugging
+- ✅ Type hints for better code quality
+- ✅ Comprehensive docstrings
+- ✅ Graceful error handling
 
 ## Installation
 
@@ -29,18 +32,39 @@ No external dependencies required - uses only Python standard library.
 
 ## Usage
 
-Run the solver directly:
+### Basic Usage
+
+Run the solver with default settings (8-Queens):
 
 ```bash
 python n_queens_solver.py
 ```
 
-By default, the program solves the 100-Queens problem. To solve for a different board size, modify the initialization in the `__main__` block:
+### Specify Board Size
 
-```python path=null start=null
-if __name__ == '__main__':
-    queens = QueensProblem(8)  # Change to desired board size
-    queens.solve_n_queens()
+Solve for any N-Queens problem:
+
+```bash
+python n_queens_solver.py 4    # Solve 4-Queens
+python n_queens_solver.py 12   # Solve 12-Queens
+python n_queens_solver.py 100  # Solve 100-Queens
+```
+
+### Verbose Mode
+
+See step-by-step progress:
+
+```bash
+python n_queens_solver.py 8 -v
+python n_queens_solver.py 8 --verbose
+```
+
+### Help
+
+View all available options:
+
+```bash
+python n_queens_solver.py --help
 ```
 
 ### Example Output
@@ -48,38 +72,47 @@ if __name__ == '__main__':
 For an 8×8 board:
 
 ```
- Q  0  0  0  0  0  0  0 
+=================================
+| Q |   |   |   |   |   |   |   |
+=================================
+|   |   |   |   |   |   | Q |   |
+=================================
+|   |   |   |   | Q |   |   |   |
+=================================
+|   |   |   |   |   |   |   | Q |
+=================================
+|   | Q |   |   |   |   |   |   |
+=================================
+|   |   |   | Q |   |   |   |   |
+=================================
+|   |   |   |   |   | Q |   |   |
+=================================
+|   |   | Q |   |   |   |   |   |
+=================================
 
- 0  0  0  0  Q  0  0  0 
-
- 0  0  0  0  0  0  0  Q 
-
- 0  0  0  0  0  Q  0  0 
-
- 0  0  Q  0  0  0  0  0 
-
- 0  0  0  0  0  0  Q  0 
-
- 0  Q  0  0  0  0  0  0 
-
- 0  0  0  Q  0  0  0  0 
+Solution found for 8-Queens problem!
 ```
 
 ## Algorithm
 
-The solver uses **backtracking** combined with **constraint propagation**:
+The solver uses a classic **backtracking** algorithm:
 
-1. **Backtracking**: Places queens column by column, trying different rows in each column
-2. **Constraint Propagation**: Marks cells that become invalid when a queen is placed, reducing the search space
-3. **Validation**: Before placing a queen, ensures no future columns would be completely blocked
+1. **Column-by-Column Placement**: Places queens one column at a time, from left to right
+2. **Safety Check**: For each column, tries each row and checks if placing a queen there is safe:
+   - No other queen in the same row
+   - No other queen in the upper-left diagonal
+   - No other queen in the lower-left diagonal
+3. **Recursion**: If placement is safe, recursively attempts to place remaining queens
+4. **Backtracking**: If no safe position exists, backtracks to the previous column and tries a different row
 
 ### Key Components
 
-- `solve_n_queens()`: Entry point that initiates the solving process
-- `solve(col_index)`: Recursive backtracking function
-- `is_place_valid(row, col)`: Validates if a queen can be placed at a position
-- `mark_position(row, col)`: Updates constraint markers when placing/removing queens
-- `print_queens()`: Displays the final solution
+- `NQueensSolver`: Main solver class
+- `solve()`: Entry point that initiates the solving process
+- `_backtrack(col)`: Recursive backtracking function that places queens
+- `_is_safe(row, col)`: Validates if a queen can be safely placed at a position
+- `_print_board()`: Displays the final solution with formatted output
+- `get_solution()`: Returns the solution as a list of row positions
 
 ### Time Complexity
 
@@ -90,23 +123,52 @@ The solver uses **backtracking** combined with **constraint propagation**:
 
 ### Small Board (4-Queens)
 
-```python path=null start=null
-queens = QueensProblem(4)
-queens.solve_n_queens()
+```bash
+$ python n_queens_solver.py 4
+
+=================
+|   |   | Q |   |
+=================
+| Q |   |   |   |
+=================
+|   |   |   | Q |
+=================
+|   | Q |   |   |
+=================
+
+Solution found for 4-Queens problem!
 ```
 
 ### Standard Chess Board (8-Queens)
 
-```python path=null start=null
-queens = QueensProblem(8)
-queens.solve_n_queens()
+```bash
+$ python n_queens_solver.py 8
+# Outputs an 8x8 board with queens placed
 ```
 
-### Large Board (100-Queens)
+### Large Board with Verbose Mode
+
+```bash
+$ python n_queens_solver.py 12 -v
+Solving 12-Queens problem...
+Placed queen at (0, 0)
+Placed queen at (2, 1)
+# ... shows all placements and backtracks
+```
+
+### Using as a Module
 
 ```python path=null start=null
-queens = QueensProblem(100)
-queens.solve_n_queens()
+from n_queens_solver import NQueensSolver
+
+# Create solver instance
+solver = NQueensSolver(n=8, verbose=False)
+
+# Solve the problem
+if solver.solve():
+    # Get solution as list of row positions
+    solution = solver.get_solution()
+    print(f"Solution: {solution}")
 ```
 
 ## Limitations
