@@ -273,8 +273,9 @@ if solver.solve():
 
 Detailed analysis and benchmarks available in:
 
+- **[MRV_EXPLAINED.md](MRV_EXPLAINED.md)** - 🎯 **How MRV achieves 194x speedup (visual explanation)**
 - **[BENCHMARKS.md](BENCHMARKS.md)** - 📊 Complete performance comparison
-- **[HEURISTICS.md](HEURISTICS.md)** - 🚀 MRV heuristic deep dive (194x speedup!)
+- **[HEURISTICS.md](HEURISTICS.md)** - 🚀 MRV heuristic technical deep dive
 - **[OPTIMIZATION.md](OPTIMIZATION.md)** - ⚡ Bitwise optimization (3.1x speedup)
 - **[COMPARISON.md](COMPARISON.md)** - 🔄 Bitwise vs Attack Tracking
 - **[RESULTS.md](RESULTS.md)** - 📈 Complete performance analysis
