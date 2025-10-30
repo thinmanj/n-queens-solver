@@ -11,12 +11,17 @@ from typing import List, Optional
 
 
 class NQueensSolver:
-    """Solves the N-Queens problem using backtracking.
+    """Solves the N-Queens problem using optimized backtracking with bitwise constraint tracking.
+    
+    Uses bitwise operations for O(1) conflict checking with minimal memory overhead.
+    This is significantly faster than set-based or array-based checking.
     
     Attributes:
         n: The size of the chessboard (N×N)
-        board: 2D list representing the chessboard (1 = queen, 0 = empty)
-        solutions_count: Number of solutions found
+        board: List of row positions for each column (1D representation)
+        col_mask: Bitmask of occupied rows
+        diag1_mask: Bitmask of occupied positive diagonals (row - col + n - 1)
+        diag2_mask: Bitmask of occupied negative diagonals (row + col)
         verbose: Whether to print progress information
     """
 
@@ -34,8 +39,10 @@ class NQueensSolver:
             raise ValueError("Board size must be at least 1")
         
         self.n = n
-        self.board: List[List[int]] = [[0] * n for _ in range(n)]
-        self.solutions_count = 0
+        self.board: List[int] = [-1] * n  # board[col] = row
+        self.col_mask = 0  # Bitmask for occupied rows
+        self.diag1_mask = 0  # Bitmask for \ diagonals
+        self.diag2_mask = 0  # Bitmask for / diagonals
         self.verbose = verbose
 
     def solve(self) -> bool:
@@ -55,7 +62,7 @@ class NQueensSolver:
             return False
 
     def _backtrack(self, col: int) -> bool:
-        """Recursively place queens using backtracking.
+        """Recursively place queens using backtracking with bitwise constraint propagation.
         
         Args:
             col: Current column to place a queen
@@ -69,9 +76,20 @@ class NQueensSolver:
 
         # Try placing a queen in each row of the current column
         for row in range(self.n):
-            if self._is_safe(row, col):
+            row_bit = 1 << row
+            diag1_bit = 1 << (row - col + self.n - 1)
+            diag2_bit = 1 << (row + col)
+            
+            # O(1) conflict checking using bitwise operations
+            if not (self.col_mask & row_bit or 
+                    self.diag1_mask & diag1_bit or 
+                    self.diag2_mask & diag2_bit):
+                
                 # Place the queen
-                self.board[row][col] = 1
+                self.board[col] = row
+                self.col_mask |= row_bit
+                self.diag1_mask |= diag1_bit
+                self.diag2_mask |= diag2_bit
                 
                 if self.verbose:
                     print(f"Placed queen at ({row}, {col})")
@@ -80,53 +98,25 @@ class NQueensSolver:
                 if self._backtrack(col + 1):
                     return True
 
-                # Backtrack: remove the queen
-                self.board[row][col] = 0
+                # Backtrack: remove the queen and constraints
+                self.col_mask ^= row_bit
+                self.diag1_mask ^= diag1_bit
+                self.diag2_mask ^= diag2_bit
+                self.board[col] = -1
+                
                 if self.verbose:
                     print(f"Backtracked from ({row}, {col})")
 
         return False
 
-    def _is_safe(self, row: int, col: int) -> bool:
-        """Check if it's safe to place a queen at board[row][col].
-        
-        Args:
-            row: Row position
-            col: Column position
-            
-        Returns:
-            True if position is safe, False otherwise
-        """
-        # Check row on the left side
-        for j in range(col):
-            if self.board[row][j] == 1:
-                return False
-
-        # Check upper diagonal on left side
-        i, j = row, col
-        while i >= 0 and j >= 0:
-            if self.board[i][j] == 1:
-                return False
-            i -= 1
-            j -= 1
-
-        # Check lower diagonal on left side
-        i, j = row, col
-        while i < self.n and j >= 0:
-            if self.board[i][j] == 1:
-                return False
-            i += 1
-            j -= 1
-
-        return True
-
     def _print_board(self) -> None:
         """Print the chessboard with queens marked as 'Q'."""
         print("\n" + "=" * (4 * self.n + 1))
-        for i in range(self.n):
+        for row in range(self.n):
             print("|", end="")
-            for j in range(self.n):
-                if self.board[i][j] == 1:
+            for col in range(self.n):
+                # board[col] gives the row where queen is placed in that column
+                if self.board[col] == row:
                     print(" Q ", end="|")
                 else:
                     print("   ", end="|")
@@ -140,13 +130,10 @@ class NQueensSolver:
         Returns:
             List of row indices where queens are placed, or None if not solved
         """
-        solution = []
-        for col in range(self.n):
-            for row in range(self.n):
-                if self.board[row][col] == 1:
-                    solution.append(row)
-                    break
-        return solution if len(solution) == self.n else None
+        # Check if solution exists (all columns have a queen placed)
+        if -1 in self.board:
+            return None
+        return list(self.board)
 
 
 def main():
