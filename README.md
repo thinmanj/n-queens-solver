@@ -139,7 +139,58 @@ python n_queens_hybrid.py 8 -t -v
 
 **Best for**: Development, debugging, learning
 
-### 4. Attack Tracking Solver (Most Intuitive)
+### 4. Backjumping Solver (Intelligent Backtracking)
+
+```bash
+# Conflict-directed backjumping
+python n_queens_backjumping.py 20
+
+# With verbose output showing backjumps
+python n_queens_backjumping.py 20 -v
+```
+
+**Best for**: N=15-25, competitive programming (guaranteed solution, 3x faster)
+
+**How it works**: Jumps directly to conflict source, not just previous column
+- See [BACKJUMPING_EXPLAINED.md](BACKJUMPING_EXPLAINED.md) for visual explanation
+
+### 5. Min-Conflicts Solver (Scales to N=1000+)
+
+```bash
+# Local search with random restarts
+python n_queens_min_conflicts.py 100
+
+# Very large boards
+python n_queens_min_conflicts.py 1000
+
+# Custom max steps per restart
+python n_queens_min_conflicts.py 500 --steps 100000
+```
+
+**Best for**: N > 50, when speed matters more than guarantees
+
+**How it works**: Start with all queens placed, iteratively fix conflicts
+- See [MIN_CONFLICTS_EXPLAINED.md](MIN_CONFLICTS_EXPLAINED.md) for visual explanation
+
+### 6. All Solutions Finder (Find Multiple/All Solutions)
+
+```bash
+# Find all solutions (standard)
+python n_queens_all_solutions.py 8
+
+# Find unique solutions only (remove symmetries)
+python n_queens_all_solutions.py 8 --unique
+
+# Parallel bit manipulation (6.4x faster!)
+python n_queens_all_solutions.py 12 --parallel
+
+# Show solutions as they're found
+python n_queens_all_solutions.py 8 --show
+```
+
+**Best for**: Enumerating all solutions, studying solution patterns
+
+### 7. Attack Tracking Solver (Most Intuitive)
 
 ```bash
 # Visual approach with attack counts
@@ -235,6 +286,47 @@ if count_valid(best_col) == 0:
 - O(N²) overhead per recursion
 - Slower for small N (≤ 12)
 
+### 4. Conflict-Directed Backjumping
+
+**Technique**: Jump to conflict source, not just previous column
+
+```python
+# Return conflict information
+success, conflict_col = backjump(col + 1)
+
+if conflict_col < col - 1:
+    return False, conflict_col  # JUMP!
+```
+
+**Pros**:
+- **3x faster** than MRV for some N
+- Skips wasteful backtracking
+- Low overhead (just one integer)
+
+**Cons**:
+- Best only for N=15-25
+- More complex implementation
+
+### 5. Min-Conflicts Local Search
+
+**Technique**: Start complete, iteratively improve
+
+```python
+# Pick conflicted queen, move to best row
+for step in range(max_steps):
+    col = random.choice(conflicted_columns())
+    board[col] = min_conflict_row(col)
+```
+
+**Pros**:
+- **Scales to N=1000+**
+- Simple, fast per step
+- No recursion/backtracking
+
+**Cons**:
+- Not guaranteed (needs restarts)
+- Variable performance (randomized)
+
 ### Complexity Analysis
 
 | Algorithm | Time/Node | Nodes Explored | Total Time | Memory |
@@ -299,14 +391,30 @@ if solver.solve():
 
 ## Documentation
 
-Detailed analysis and benchmarks available in:
+### 📖 Visual Algorithm Explanations
 
-- **[MRV_EXPLAINED.md](MRV_EXPLAINED.md)** - 🎯 **How MRV achieves 194x speedup (visual explanation)**
-- **[BENCHMARKS.md](BENCHMARKS.md)** - 📊 Complete performance comparison
-- **[HEURISTICS.md](HEURISTICS.md)** - 🚀 MRV heuristic technical deep dive
-- **[OPTIMIZATION.md](OPTIMIZATION.md)** - ⚡ Bitwise optimization (3.1x speedup)
-- **[COMPARISON.md](COMPARISON.md)** - 🔄 Bitwise vs Attack Tracking
+Step-by-step guides with ASCII art and real-world analogies:
+
+- **[MRV_EXPLAINED.md](MRV_EXPLAINED.md)** - 🎯 **How MRV achieves 194x speedup** (jigsaw puzzle analogy)
+- **[BACKJUMPING_EXPLAINED.md](BACKJUMPING_EXPLAINED.md)** - 🔙 **Intelligent backtracking** (skip wasteful work)
+- **[MIN_CONFLICTS_EXPLAINED.md](MIN_CONFLICTS_EXPLAINED.md)** - 🏔️ **Local search for N=1000+** (hill climbing)
+
+### 📊 Performance Analysis
+
+- **[ADVANCED_HEURISTICS.md](ADVANCED_HEURISTICS.md)** - 🧪 **10+ heuristics evaluated** (what works, what doesn't)
+- **[HEURISTIC_EVALUATION.md](HEURISTIC_EVALUATION.md)** - 📈 **Complete benchmark results** and recommendations
+- **[BENCHMARKS.md](BENCHMARKS.md)** - 📊 Historical performance comparison
 - **[RESULTS.md](RESULTS.md)** - 📈 Complete performance analysis
+
+### 🔧 Technical Deep Dives
+
+- **[HEURISTICS.md](HEURISTICS.md)** - 🚀 MRV heuristic technical details
+- **[OPTIMIZATION.md](OPTIMIZATION.md)** - ⚡ Bitwise optimization (3.1x speedup)
+- **[COMPARISON.md](COMPARISON.md)** - 🔄 Algorithm trade-offs
+- **[ALL_SOLUTIONS_ANALYSIS.md](ALL_SOLUTIONS_ANALYSIS.md)** - 🔍 Finding all solutions (6.4x speedup)
+
+### 🛠️ Project Info
+
 - **[WARP.md](WARP.md)** - 🛠️ Project structure and commands
 
 ## Benchmarks
@@ -316,23 +424,51 @@ Detailed analysis and benchmarks available in:
 ```
 Standard Backtracking:  0.9117s  (baseline)
 Bitwise Optimization:   0.9117s  (same, but cleaner)
-Attack Tracking:        1.1326s  (20% slower, more intuitive)
-Hybrid (no tracking):   0.9481s  (4% slower)
-MRV Heuristic:          0.0047s  🚀 194x FASTER!
+MRV Heuristic:          0.0047s  ⚡ 194x FASTER!
+Backjumping + MRV:      0.0013s  🚀 700x FASTER!
+Min-Conflicts:          0.0056s  ✨ 163x faster (variable)
 ```
 
 ### Nodes Explored (N=20)
 
 ```
-Standard:  ~1,000,000+ nodes
-MRV:       145 nodes (99.99% reduction!)
+Standard:      ~1,000,000+ nodes
+MRV:           145 nodes (99.99% reduction!)
+Backjumping:   31 nodes (78% fewer than MRV!)
+Min-Conflicts: 58 steps (iterative improvement)
+```
+
+### Scalability Test
+
+| N | MRV | Backjumping | Min-Conflicts |
+|---|-----|-------------|---------------|
+| 20 | 0.0045s | **0.0013s** | 0.0056s |
+| 50 | 0.1806s | 0.1449s | **0.0320s** |
+| 100 | 0.1375s | 0.1218s | 0.4066s |
+| 1000 | FAIL | FAIL | **175.8s** ✅ |
+
+**Key Insight**: Different algorithms dominate at different scales!
+
+### Algorithm Selection Guide
+
+```
+N ≤ 15:  Backjumping  (fastest, guaranteed)
+N = 15-50:  MRV          (consistent, predictable)
+N > 50:     Min-Conflicts (only option that scales)
+All solns:  Parallel Bits (6.4x faster)
 ```
 
 ## Limitations
 
-- Only finds **one valid solution** (not all solutions)
+### Single Solution Solvers
+- Only find **one valid solution** (except n_queens_all_solutions.py)
 - Some board sizes have no solution (e.g., N=2, N=3)
 - MRV overhead makes it slower for very small N (≤ 12)
+
+### Min-Conflicts (Local Search)
+- **Not guaranteed** to find solution (but rarely fails with restarts)
+- **Variable performance** due to randomization
+- Best for N > 50 where complete algorithms struggle
 
 ## Contributing
 
