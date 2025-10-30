@@ -6,33 +6,51 @@ A comprehensive collection of N-Queens problem solvers, from basic backtracking 
 
 The N-Queens problem is a classic combinatorial puzzle: place N chess queens on an N×N chessboard so no two queens threaten each other (same row, column, or diagonal).
 
-This repository contains **5 different implementations** showcasing various optimization techniques:
+This repository contains **8+ different implementations** showcasing various optimization techniques:
 
 1. **Bitwise Solver** (`n_queens_solver.py`) - 3x faster with O(1) constraint checking
-2. **Attack Tracking** (`n_queens_attack_tracking.py`) - Visualizable 2D board approach
-3. **Hybrid Solver** (`n_queens_hybrid.py`) - Best of both worlds
-4. **MRV Heuristic** (`n_queens_heuristic.py`) - **194x faster for large boards!**
-5. **Original** (in git history) - Classic set-based approach
+2. **MRV Heuristic** (`n_queens_heuristic.py`) - **194x faster for large boards!**
+3. **Backjumping** (`n_queens_backjumping.py`) - Intelligent backtracking (up to 3x faster)
+4. **Min-Conflicts** (`n_queens_min_conflicts.py`) - **Scales to N=1000+!**
+5. **Attack Tracking** (`n_queens_attack_tracking.py`) - Visualizable 2D board approach
+6. **Hybrid Solver** (`n_queens_hybrid.py`) - Speed + visualization
+7. **All Solutions** (`n_queens_all_solutions.py`) - Find all/unique solutions (parallel bits 6.4x faster)
+8. **Original** (in git history) - Classic set-based approach
 
 ## Performance Comparison
 
-| Board Size | Bitwise | Attack Track | Hybrid | **MRV Heuristic** |
-|------------|---------|--------------|--------|-------------------|
-| N=8        | 0.0003s | 0.0004s     | 0.0003s | 0.0008s          |
-| N=12       | 0.0009s | 0.0010s     | 0.0008s | 0.0022s          |
-| N=15       | 0.0047s | 0.0058s     | 0.0049s | **0.0009s** ⚡    |
-| N=20       | 0.9117s | 1.1326s     | 0.9481s | **0.0047s** 🚀   |
-| N=25       | ~3s     | ~4s         | ~3s     | **0.0104s** ⭐    |
+### Single Solution (Small to Medium N)
 
-**Key Insight**: MRV heuristic provides **194x speedup** for N=20 by exploring only 145 nodes instead of millions!
+| Board Size | MRV | Backjumping | Min-Conflicts |
+|------------|-----|-------------|---------------|
+| N=8        | 0.0007s | 0.0006s | 0.0003s |
+| N=12       | 0.0023s | 0.0020s | 0.0070s |
+| N=15       | 0.0011s | 0.0013s | 0.0053s |
+| N=20       | 0.0045s | **0.0013s** 🚀 | 0.0056s |
+| N=25       | 0.0103s | 0.0434s | 0.0181s |
+
+### Single Solution (Large N) - Where Min-Conflicts Shines!
+
+| Board Size | MRV | Backjumping | **Min-Conflicts** |
+|------------|-----|-------------|-------------------|
+| N=50       | 0.1806s | 0.1449s | **0.0320s** ⚡ |
+| N=100      | 0.1375s | 0.1218s | 0.4066s |
+| N=1000     | - | - | **175.8s** 🚀 |
+
+**Key Insights**:
+- **Backjumping**: Best for N=15-25 (intelligent backtracking)
+- **MRV**: Consistent performance, 194x faster than naive
+- **Min-Conflicts**: Scales to N=1000+ (impossible for complete algorithms!)
 
 ## Features
 
-- ✅ **5 different solvers** from basic to cutting-edge
+- ✅ **8+ different solvers** from basic to cutting-edge
 - ✅ **Bitwise operations** for 3x speed improvement
 - ✅ **MRV heuristic** for 194x speedup on large boards
+- ✅ **Backjumping** for intelligent backtracking
+- ✅ **Min-Conflicts** local search scales to N=1000+
+- ✅ **All solutions finder** with symmetry breaking
 - ✅ **Attack visualization** for debugging
-- ✅ **Hybrid approach** combining speed + visualization
 - ✅ Comprehensive documentation and benchmarks
 - ✅ Type hints and docstrings throughout
 - ✅ No external dependencies - pure Python stdlib
@@ -52,14 +70,24 @@ No external dependencies required - uses only Python standard library.
 
 ### Which Solver Should I Use?
 
-- **N ≤ 12**: Use bitwise solver (fastest for small boards)
+- **N ≤ 15**: Use Backjumping (fastest for small-medium boards)
   ```bash
-  python n_queens_solver.py 12
+  python n_queens_backjumping.py 15
   ```
 
-- **N ≥ 15**: Use MRV heuristic (dramatically faster!)
+- **N = 15-50**: Use MRV heuristic (consistent, predictable)
   ```bash
   python n_queens_heuristic.py 20 --mrv
+  ```
+
+- **N > 50**: Use Min-Conflicts (scales to thousands!)
+  ```bash
+  python n_queens_min_conflicts.py 1000
+  ```
+
+- **All solutions**: Use parallel bit manipulation
+  ```bash
+  python n_queens_all_solutions.py 12 --parallel
   ```
 
 - **Debugging**: Use hybrid with attack tracking
